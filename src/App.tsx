@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import Map from "react-map-gl";
 import type { MapRef } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import type { TripUpdate, VehiclePosition, Alert, Entity } from "./types";
+import type { TripUpdate, VehiclePosition, Alert } from "./types";
 import { fetchCombinedFeed } from "./fetchUtils";
+import MapboxManager from "./mapboxManager";
 
 export default function App() {
   const mapRef = useRef<MapRef | null>(null);
@@ -21,7 +22,6 @@ export default function App() {
     let alerts: Alert[];
 
     const combinedFeed = await fetchCombinedFeed();
-    console.log("Combined Feed:", combinedFeed);
 
     if (!combinedFeed || !combinedFeed.entity) return;
 
@@ -38,22 +38,11 @@ export default function App() {
     setTripUpdates(tripUpdates);
     setVehiclePositions(vehiclePositions);
     setAlerts(alerts);
-
-    console.log("Trip Updates:", tripUpdates, "Vehicle Positions:", vehiclePositions, "Alerts:", alerts);
   }
 
   return (
     <div className="map">
-      <Map
-        ref={mapRef}
-        mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
-        initialViewState={{
-          longitude: 174.7633,
-          latitude: -36.8485,
-          zoom: 11,
-        }}
-        mapStyle="mapbox://styles/mapbox/dark-v11"
-      />
+      <MapboxManager mapRef={mapRef} />
     </div>
   );
 }
