@@ -1,104 +1,73 @@
-# Auckland Infrastructure Realtime Display
+# React + TypeScript + Vite
 
-Auckland Infrastructure Realtime Display is a realtime geospatial dashboard that visualizes Auckland's transport and infrastructure systems through an interactive map and analytics interface.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-The platform combines public datasets from Auckland Transport, Auckland Council, NZTA, weather services, and GIS data providers to create a live operational view of the city.
+Currently, two official plugins are available:
 
-## Features
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-### Public Transport
-- Live bus locations
-- Route visualization
-- Transport stops
-- Service alerts
-- Route metadata
+## React Compiler
 
-### Traffic & Roads
-- Road network visualization
-- Traffic incidents
-- Road closures
-- Congestion overlays
-- Infrastructure disruptions
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### Urban Infrastructure
-- Roadworks
-- Construction zones
-- Parking infrastructure
-- Cycling infrastructure
-- Transport facilities
+## Expanding the ESLint configuration
 
-### Environmental Data
-- Weather overlays
-- Rain radar
-- Severe weather alerts
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-### Geospatial Visualization
-- Interactive map interface
-- Layer controls
-- Realtime updates
-- High-performance rendering using Deck.gl
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
----
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-## Architecture
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-The system is built around three core data layers:
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-### Geometry Layer
-Represents the physical city infrastructure.
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-Examples:
-- Roads
-- Motorways
-- Bus route polylines
-- Infrastructure assets
-
-### Logic Layer
-Represents how transport systems operate.
-
-Examples:
-- Routes
-- Stops
-- Trips
-- Schedules
-
-### State Layer
-Represents live city conditions.
-
-Examples:
-- Vehicle positions
-- Delays
-- Incidents
-- Congestion
-- Service disruptions
-
----
-
-## Technology Stack
-
-### Frontend
-- React
-- TypeScript
-- Mapbox GL JS
-- Deck.gl
-- Tailwind CSS
-
-### Backend
-- Node.js / FastAPI
-- Redis
-- PostgreSQL
-- PostGIS
-- WebSockets
-
-### Data Sources
-- Auckland Transport APIs
-- AT GIS Open Data
-- NZTA Traffic APIs
-- Auckland Council Open Data
-- LINZ Data Service
-- OpenStreetMap
-- MetService
-
----
-
-## Project Structure
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
