@@ -10,8 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.3.4",
+    "@deck.gl/layers": "^9.3.4",
+    "@deck.gl/react": "^9.3.4",
+    "@reduxjs/toolkit": "^2.12.0",
+    "mapbox-gl": "^3.24.1",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "react-redux": "^9.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
