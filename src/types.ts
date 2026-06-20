@@ -1,3 +1,22 @@
+export const MapStyle = {
+  Standard: "mapbox://styles/mapbox/standard",
+  Light: "mapbox://styles/mapbox/light-v11",
+  Dark: "mapbox://styles/mapbox/dark-v11",
+  Satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+  NavLight: "mapbox://styles/mapbox/navigation-day-v1",
+  NavDark: "mapbox://styles/mapbox/navigation-night-v1",
+};
+
+export const TimeOfDay = {
+  Day: 'day',
+  Dusk: 'dusk',
+  Night: 'night'
+}
+
+export type timeOfDayType = typeof TimeOfDay[keyof typeof TimeOfDay]
+
+export type MapStyleType = typeof MapStyle[keyof typeof MapStyle];
+
 export type ApiFrame = {
   status: string;
   response: ApiFrameResponse;
