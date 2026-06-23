@@ -2,7 +2,8 @@ import Map from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
 import { useEffect, useRef, useCallback } from "react";
 import type { MapStyleType, timeOfDayType, Vehicle } from "./types";
-import { addVehicleLayers, updateVehicleSource, setupVehicleEvents, removeVehicleLayers, removeVehicleSources, addVehicleSources } from "./mapbox/vehicleUtils";
+import { addVehicleLayers, updateVehicleSource, setupVehicleEvents, removeVehicleLayers, removeVehicleSources, addVehicleSources } from "./mapbox/utils/vehicleUtils";
+import { addRouteLayers, addRouteSources, removeRouteSources, setupRouteEvents, updateRouteSource } from "./mapbox/utils/routeUtils";
 
 type MapboxManagerProps = {
   mapRef: React.RefObject<MapRef | null>;
@@ -13,6 +14,7 @@ type MapboxManagerProps = {
   roadLabelVisible: boolean;
   placeLabelVisible: boolean;
   transitLabelVisible: boolean;
+  routeGeoJson: GeoJSON.FeatureCollection;
 }
 
 function MapboxManager(props: MapboxManagerProps) {
@@ -24,11 +26,13 @@ function MapboxManager(props: MapboxManagerProps) {
     poiLabelVisible,
     roadLabelVisible,
     placeLabelVisible,
-    transitLabelVisible
+    transitLabelVisible,
+    routeGeoJson
   } = props;
 
   // Cleanup const
   const cleanupVehicleEventsRef = useRef<(() => void) | undefined>(undefined);
+  const cleanupRouteEventsRef = useRef<(() => void) | undefined>(undefined);
   const eventSetupRef = useRef<boolean>(false);
 
   /* ----------------------- Source and Layer Management ----------------------- */
@@ -37,8 +41,9 @@ function MapboxManager(props: MapboxManagerProps) {
     if (!mapRef.current) return;
 
     updateVehicleSource(mapRef, vehiclePositions);
+    updateRouteSource(mapRef, routeGeoJson);
 
-  }, [mapRef, vehiclePositions]);
+  }, [mapRef, vehiclePositions, routeGeoJson]);
 
   const updateSourcesRef = useRef(updateSources);
 
@@ -49,6 +54,7 @@ function MapboxManager(props: MapboxManagerProps) {
     cleanupEvents();
 
     cleanupVehicleEventsRef.current = setupVehicleEvents(mapRef);
+    cleanupRouteEventsRef.current = setupRouteEvents(mapRef)
 
     eventSetupRef.current = true;
   }, [mapRef]);
@@ -57,16 +63,19 @@ function MapboxManager(props: MapboxManagerProps) {
     if (!mapRef.current) return;
 
     addVehicleLayers(mapRef);
+    addRouteLayers(mapRef)
   }, [mapRef]);
 
   const setupSources = useCallback(() => {
     if (!mapRef.current) return;
 
     addVehicleSources(mapRef);
+    addRouteSources(mapRef)
   }, [mapRef]);
 
   const cleanupEvents = useCallback(() => {
     cleanupVehicleEventsRef.current?.();
+    cleanupRouteEventsRef.current?.();
     eventSetupRef.current = false;
   }, []);
 
@@ -132,6 +141,8 @@ function MapboxManager(props: MapboxManagerProps) {
 
       removeVehicleLayers(mapRef)
       removeVehicleSources(mapRef);
+      removeVehicleLayers(mapRef);
+      removeRouteSources(mapRef);
     }
   }, [mapRef, styleLoadHandler]);
 

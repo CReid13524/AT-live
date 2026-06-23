@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { type TripUpdate, type Vehicle, type Alert, type MapStyleType, MapStyle, type timeOfDayType, TimeOfDay } from "./types";
-import { fetchCombinedFeed } from "./fetchUtils";
+import { fetchCombinedFeed, fetchRouteGeoJson } from "./fetchUtils";
 import MapboxManager from "./mapboxManager";
 import MapControl from "./components/MapControl";
 import { FaMap } from "react-icons/fa";
@@ -13,6 +13,7 @@ export default function App() {
   const [vehiclePositions, setVehiclePositions] = useState<Vehicle[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [stylePanelOpen, setStylePanelOpen] = useState(false);
+  const [routeGeoJson, setRouteGeoJson] = useState<any>(null);
 
   // Map Style Management
   const [mapStyle, setMapStyle] = useState<MapStyleType>(MapStyle.Standard);
@@ -22,11 +23,13 @@ export default function App() {
   const [placeLabelVisible, setPlaceLabelVisible] = useState(true);
   const [transitLabelVisible, setTransitLabelVisible] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [])
+  const fetchRouteData = async () => {
+    const routeGeoJson = await fetchRouteGeoJson();
 
-  const fetchData = async () => {
+    setRouteGeoJson(routeGeoJson);
+  }
+
+  const fetchCombinedData = async () => {
     let tripUpdates: TripUpdate[];
     let vehiclePositions: Vehicle[];
     let alerts: Alert[];
@@ -48,8 +51,21 @@ export default function App() {
     setTripUpdates(tripUpdates);
     setVehiclePositions(vehiclePositions);
     setAlerts(alerts);
-
   }
+
+  // Initial load + polling
+  useEffect(() => {
+    // Initial load
+    fetchRouteData();
+    fetchCombinedData();
+
+    // Poll combined feed every 5 seconds
+    const id = setInterval(() => {
+      fetchCombinedData();
+    }, 5000);
+
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="map">
@@ -86,6 +102,7 @@ export default function App() {
         roadLabelVisible={roadLabelVisible}
         placeLabelVisible={placeLabelVisible}
         transitLabelVisible={transitLabelVisible}
+        routeGeoJson={routeGeoJson}
       />
     </div>
   );

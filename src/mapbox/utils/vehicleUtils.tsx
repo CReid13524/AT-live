@@ -1,15 +1,10 @@
 import type { MapRef } from 'react-map-gl/mapbox';
-import { getBusFillExtrusionLayer, getBusPointLayer } from './vehicleLayers';
-import type { Vehicle } from '../types';
+import { getBusFillExtrusionLayer, getBusPointLayer } from '../layers/vehicleLayers';
+import type { Vehicle } from '../../types';
 import { GeoJSONSource, Popup } from 'mapbox-gl';
 import { destination } from "@turf/turf";
 import type { MapMouseEvent } from 'react-map-gl/mapbox-legacy';
-
-export const VEHICLE_SOURCE_ID = 'vehicle-source-id';
-export const VEHICLE_POINT_SOURCE_ID = 'vehicle-point-source-id';
-
-export const VEHICLE_BUS_LAYER_ID = "vehicle-bus-layer-id";
-export const VEHICLE_BUS_POINT_LAYER_ID = "vehicle-bus-point-layer-id";
+import { VEHICLE_SOURCE_ID, VEHICLE_POINT_SOURCE_ID, VEHICLE_BUS_LAYER_ID, VEHICLE_BUS_POINT_LAYER_ID } from '../baseConfig';
 
 export function collectBusFeatures(vehiclePositions: Vehicle[]): GeoJSON.Feature[] {
   return vehiclePositions

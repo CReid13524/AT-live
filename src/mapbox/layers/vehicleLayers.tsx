@@ -4,7 +4,7 @@ import {
   VEHICLE_BUS_LAYER_ID,
   VEHICLE_BUS_POINT_LAYER_ID,
   VEHICLE_POINT_SOURCE_ID,
-} from "./vehicleUtils";
+} from "../baseConfig";
 
 export const getBusFillExtrusionLayer = (): FillExtrusionLayer => ({
   id: VEHICLE_BUS_LAYER_ID,
