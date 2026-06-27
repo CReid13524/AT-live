@@ -1,10 +1,45 @@
 import type { MapRef } from 'react-map-gl/mapbox';
-import { getRouteLineLayer, getRouteOutlineLayer } from '../layers/routeLayers';
+import {
+  getBusRouteLineLayer,
+  getFerryRouteLineLayer,
+  getTrainRouteLineLayer,
+} from '../layers/routeLayers';
 import { GeoJSONSource, Popup } from 'mapbox-gl';
 import type { MapMouseEvent } from 'react-map-gl/mapbox-legacy';
-import { ROUTE_SOURCE_ID, CLICK_TOLERANCE, ROUTE_LAYER_ID } from '../baseConfig';
+import {
+  CLICK_TOLERANCE,
+  BUS_ROUTE_LAYER_ID,
+  BUS_ROUTE_SOURCE_ID,
+  FERRY_ROUTE_LAYER_ID,
+  FERRY_ROUTE_SOURCE_ID,
+  TRAIN_ROUTE_LAYER_ID,
+  TRAIN_ROUTE_SOURCE_ID,
+  TRAIN_STOP_LAYER_ID,
+} from '../baseConfig';
 
-export function collectRouteFeatures(routes: GeoJSON.Feature[]): GeoJSON.Feature[] {
+export function collectBusRouteFeatures(routes: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  return routes.map((route) => {
+    return {
+      ...route,
+      properties: {
+        ...route.properties,
+      }
+    }
+  });
+}
+
+export function collectFerryRouteFeatures(routes: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  return routes.map((route) => {
+    return {
+      ...route,
+      properties: {
+        ...route.properties,
+      }
+    }
+  });
+}
+
+export function collectTrainRouteFeatures(routes: GeoJSON.Feature[]): GeoJSON.Feature[] {
   return routes.map((route) => {
     return {
       ...route,
@@ -17,18 +52,41 @@ export function collectRouteFeatures(routes: GeoJSON.Feature[]): GeoJSON.Feature
 
 /* ----------------------- Load Sources ----------------------- */
 
-export function updateRouteSource(mapRef: React.RefObject<MapRef | null>, routes: GeoJSON.FeatureCollection) {
+export function updateRouteSource(
+  mapRef: React.RefObject<MapRef | null>,
+  busRoutes: GeoJSON.FeatureCollection | null,
+  ferryRoutes: GeoJSON.FeatureCollection | null,
+  trainRoutes: GeoJSON.FeatureCollection | null
+) {
   if (!mapRef.current) return;
 
-  const routeFeatures = collectRouteFeatures(routes.features);
+  const busRouteFeatures = collectBusRouteFeatures(busRoutes?.features || []);
+  const ferryRouteFeatures = collectFerryRouteFeatures(ferryRoutes?.features || []);
+  const trainRouteFeatures = collectTrainRouteFeatures(trainRoutes?.features || []);
 
-  const routeGeojson: GeoJSON.FeatureCollection = {
+  const busRouteGeojson: GeoJSON.FeatureCollection = {
     type: 'FeatureCollection',
-    features: routeFeatures,
+    features: busRouteFeatures,
   };
 
-  const routeSource = mapRef.current.getMap().getSource(ROUTE_SOURCE_ID) as GeoJSONSource;
-  routeSource?.setData(routeGeojson);
+  const ferryRouteGeojson: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: ferryRouteFeatures,
+  };
+
+  const trainRouteGeojson: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: trainRouteFeatures,
+  };
+
+  const busRouteSource = mapRef.current.getMap().getSource(BUS_ROUTE_SOURCE_ID) as GeoJSONSource;
+  busRouteSource?.setData(busRouteGeojson);
+
+  const ferryRouteSource = mapRef.current.getMap().getSource(FERRY_ROUTE_SOURCE_ID) as GeoJSONSource;
+  ferryRouteSource?.setData(ferryRouteGeojson);
+
+  const trainRouteSource = mapRef.current.getMap().getSource(TRAIN_ROUTE_SOURCE_ID) as GeoJSONSource;
+  trainRouteSource?.setData(trainRouteGeojson);
 }
 
 /* ---------------- Cleanup Layers and Sources ---------------- */
@@ -38,7 +96,7 @@ export function removeRouteLayers(mapRef: React.RefObject<MapRef | null>) {
 
   const map = mapRef.current.getMap();
 
-  [ROUTE_LAYER_ID].forEach((layerId) => {
+  [BUS_ROUTE_LAYER_ID, FERRY_ROUTE_LAYER_ID, TRAIN_ROUTE_LAYER_ID].forEach((layerId) => {
     if (map.getLayer(layerId)) {
       map.removeLayer(layerId);
     }
@@ -50,7 +108,7 @@ export function removeRouteSources(mapRef: React.RefObject<MapRef | null>) {
 
   const map = mapRef.current.getMap();
 
-  [ROUTE_SOURCE_ID].forEach((sourceId) => {
+  [BUS_ROUTE_SOURCE_ID, FERRY_ROUTE_SOURCE_ID, TRAIN_ROUTE_SOURCE_ID].forEach((sourceId) => {
     if (map.getSource(sourceId)) {
       map.removeSource(sourceId);
     }
@@ -64,15 +122,17 @@ export function addRouteSources(mapRef: React.RefObject<MapRef | null>) {
 
   const map = mapRef.current.getMap();
 
-  if (!map.getSource(ROUTE_SOURCE_ID)) {
-    map.addSource(ROUTE_SOURCE_ID, {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: [],
-      },
-    });
-  }
+  [BUS_ROUTE_SOURCE_ID, FERRY_ROUTE_SOURCE_ID, TRAIN_ROUTE_SOURCE_ID].forEach((sourceId) => {
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+      });
+    }
+  });
 }
 
 export function addRouteLayers(mapRef: React.RefObject<MapRef | null>) {
@@ -82,7 +142,7 @@ export function addRouteLayers(mapRef: React.RefObject<MapRef | null>) {
     if (!mapRef.current) return;
 
     if (!mapRef.current.getMap().getLayer(layer.id)) {
-      mapRef.current.getMap().addLayer(layer);
+      mapRef.current.getMap().addLayer(layer,TRAIN_STOP_LAYER_ID);
     }
   });
 }
@@ -102,7 +162,7 @@ export function setupRouteEvents(mapRef: React.RefObject<MapRef | null>) {
         [e.point.x + CLICK_TOLERANCE, e.point.y + CLICK_TOLERANCE],
       ],
       {
-        layers: [ROUTE_LAYER_ID],
+        layers: [BUS_ROUTE_LAYER_ID, FERRY_ROUTE_LAYER_ID, TRAIN_ROUTE_LAYER_ID],
       }
     ).filter((f) => f.properties?.ROUTEPATTERN);
 
@@ -116,7 +176,11 @@ export function setupRouteEvents(mapRef: React.RefObject<MapRef | null>) {
             <strong>${features.length} routes:</strong>
             <ul>
               ${features.map((f) => `
-                <li>${f.properties?.ROUTENAME || 'Unnamed'}</li>
+                <li>
+                  ${Object.entries(f.properties || {}).map(([key, value]) => `
+                    <div><strong>${key}:</strong> ${value}</div>
+                  `).join('')}
+                </li>
               `).join('')}
             </ul>
           </div>
@@ -140,10 +204,14 @@ export function setupRouteEvents(mapRef: React.RefObject<MapRef | null>) {
     }
   }
 
-  map.on('click', ROUTE_LAYER_ID, onClick);
+  [BUS_ROUTE_LAYER_ID, FERRY_ROUTE_LAYER_ID, TRAIN_ROUTE_LAYER_ID].forEach((layerId) => {
+    map.on('click', layerId, onClick);
+  });
 
   return () => {
-    map.off('click', ROUTE_LAYER_ID, onClick);
+    [BUS_ROUTE_LAYER_ID, FERRY_ROUTE_LAYER_ID, TRAIN_ROUTE_LAYER_ID].forEach((layerId) => {
+      map.off('click', layerId, onClick);
+    });
   }
 }
 
@@ -153,8 +221,9 @@ export function setupRouteEvents(mapRef: React.RefObject<MapRef | null>) {
 
 const getRouteLayers = () => {
   return [
-    getRouteLineLayer(),
-    getRouteOutlineLayer()
+    getBusRouteLineLayer(),
+    getFerryRouteLineLayer(),
+    getTrainRouteLineLayer(),
   ];
 }
 

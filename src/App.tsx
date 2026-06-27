@@ -1,32 +1,69 @@
 import { useEffect, useRef, useState } from "react";
 import type { MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { type TripUpdate, type Vehicle, type Alert, type MapStyleType, MapStyle, type timeOfDayType, TimeOfDay } from "./types";
-import { fetchCombinedFeed, fetchRouteGeoJson } from "./fetchUtils";
-import MapboxManager from "./mapboxManager";
+import { type TripUpdate, type Vehicle, type Alert } from "./types/at-dev-types";
+import { MapStyle, TimeOfDay, VEHICLE_LAYER_CONTROLS, STOP_LAYER_CONTROLS, ROUTE_LAYER_CONTROLS, type MapAppearance, type StaticFeatureCollections, type AppContextType } from "./types/types";
+import { fetchCombinedFeed, fetchBusRoutes, fetchBusStops, fetchFerryRoutes, fetchFerryStops, fetchTrainRoutes, fetchTrainStops } from "./utils/fetchUtils";
+import { AppContext } from "./utils/contextUtils";
+import MapboxManager from "./components/mapboxManager";
 import MapControl from "./components/MapControl";
-import { FaMap } from "react-icons/fa";
 
 export default function App() {
   const mapRef = useRef<MapRef | null>(null);
+  const mapboxManagerRef = useRef<{ applyLayerControls: () => void } | null>(null);
   const [tripUpdates, setTripUpdates] = useState<TripUpdate[]>([]);
   const [vehiclePositions, setVehiclePositions] = useState<Vehicle[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [stylePanelOpen, setStylePanelOpen] = useState(false);
-  const [routeGeoJson, setRouteGeoJson] = useState<any>(null);
 
-  // Map Style Management
-  const [mapStyle, setMapStyle] = useState<MapStyleType>(MapStyle.Standard);
-  const [timeOfDay, setTimeOfDay] = useState<timeOfDayType>(TimeOfDay.Day);
-  const [poiLabelVisible, setPOILabelVisible] = useState(true);
-  const [roadLabelVisible, setRoadLabelVisible] = useState(true);
-  const [placeLabelVisible, setPlaceLabelVisible] = useState(true);
-  const [transitLabelVisible, setTransitLabelVisible] = useState(true);
+  const [appearance, setAppearance] = useState<MapAppearance>({
+    style: MapStyle.Dark,
+    timeOfDay: TimeOfDay.Day,
+    labels: {
+      poi: true,
+      roads: true,
+      places: true,
+      transit: true
+    }
+  });
 
-  const fetchRouteData = async () => {
-    const routeGeoJson = await fetchRouteGeoJson();
+  const [staticLayers, setStaticLayers] = useState<StaticFeatureCollections>({
+    busRoutes: { type: "FeatureCollection", features: [] },
+    busStops: { type: "FeatureCollection", features: [] },
+    ferryRoutes: { type: "FeatureCollection", features: [] },
+    ferryStops: { type: "FeatureCollection", features: [] },
+    trainRoutes: { type: "FeatureCollection", features: [] },
+    trainStations: { type: "FeatureCollection", features: [] }
+  });
 
-    setRouteGeoJson(routeGeoJson);
+  const layerControls = {
+    vehicles: useRef(VEHICLE_LAYER_CONTROLS),
+    stops: useRef(STOP_LAYER_CONTROLS),
+    routes: useRef(ROUTE_LAYER_CONTROLS)
+  };
+
+  const fetchBusRoutesData = async () => {
+    const busRoutesData = await fetchBusRoutes();
+    setStaticLayers(prev => ({ ...prev, busRoutes: busRoutesData }));
+  }
+  const fetchBusStopsData = async () => {
+    const busStopsData = await fetchBusStops();
+    setStaticLayers(prev => ({ ...prev, busStops: busStopsData }));
+  }
+  const fetchFerryRoutesData = async () => {
+    const ferryRoutesData = await fetchFerryRoutes();
+    setStaticLayers(prev => ({ ...prev, ferryRoutes: ferryRoutesData }));
+  }
+  const fetchFerryStopsData = async () => {
+    const ferryStopsData = await fetchFerryStops();
+    setStaticLayers(prev => ({ ...prev, ferryStops: ferryStopsData }));
+  }
+  const fetchTrainRoutesData = async () => {
+    const trainRoutesData = await fetchTrainRoutes();
+    setStaticLayers(prev => ({ ...prev, trainRoutes: trainRoutesData }));
+  }
+  const fetchTrainStationsData = async () => {
+    const trainStationsData = await fetchTrainStops();
+    setStaticLayers(prev => ({ ...prev, trainStations: trainStationsData }));
   }
 
   const fetchCombinedData = async () => {
@@ -53,10 +90,21 @@ export default function App() {
     setAlerts(alerts);
   }
 
+  const contextObject: AppContextType = {
+    tripUpdates,
+    vehiclePositions,
+    alerts,
+  };
+
   // Initial load + polling
   useEffect(() => {
     // Initial load
-    fetchRouteData();
+    fetchBusRoutesData();
+    fetchBusStopsData();
+    fetchFerryRoutesData();
+    fetchFerryStopsData();
+    fetchTrainRoutesData();
+    fetchTrainStationsData();
     fetchCombinedData();
 
     // Poll combined feed every 5 seconds
@@ -68,42 +116,25 @@ export default function App() {
   }, []);
 
   return (
-    <div className="map">
-      <div className="map-control">
-        <button
-          className="map-button"
-          onClick={() => setStylePanelOpen(v => !v)}
-        >
-          <FaMap />
-        </button>
-
+    <AppContext.Provider value={contextObject}>
+      <div className="main-content">
         <MapControl
-          open={stylePanelOpen}
-          mapStyle={mapStyle}
-          setMapStyle={setMapStyle}
-          timeOfDay={timeOfDay}
-          setTimeOfDay={setTimeOfDay}
-          poiLabelVisible={poiLabelVisible}
-          setPOILabelVisible={setPOILabelVisible}
-          roadLabelVisible={roadLabelVisible}
-          setRoadLabelVisible={setRoadLabelVisible}
-          placeLabelVisible={placeLabelVisible}
-          setPlaceLabelVisible={setPlaceLabelVisible}
-          transitLabelVisible={transitLabelVisible}
-          setTransitLabelVisible={setTransitLabelVisible}
+          appearance={appearance}
+          setAppearance={setAppearance}
+          layerControls={layerControls}
+          layerControlRefresh={() => {
+            mapboxManagerRef.current?.applyLayerControls();
+          }}
+        />
+
+        <MapboxManager
+          ref={mapboxManagerRef}
+          mapRef={mapRef}
+          appearance={appearance}
+          staticLayers={staticLayers}
+          layerControls={layerControls}
         />
       </div>
-      <MapboxManager
-        mapRef={mapRef}
-        vehiclePositions={vehiclePositions}
-        mapStyle={mapStyle}
-        timeOfDay={timeOfDay}
-        poiLabelVisible={poiLabelVisible}
-        roadLabelVisible={roadLabelVisible}
-        placeLabelVisible={placeLabelVisible}
-        transitLabelVisible={transitLabelVisible}
-        routeGeoJson={routeGeoJson}
-      />
-    </div>
+    </AppContext.Provider>
   );
 }

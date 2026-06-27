@@ -12,7 +12,7 @@ export const getBusFillExtrusionLayer = (): FillExtrusionLayer => ({
   source: VEHICLE_SOURCE_ID,
   paint: {
     "fill-extrusion-color": "#00b7ff",
-    "fill-extrusion-height": 2,
+    "fill-extrusion-height": 8,
     "fill-extrusion-base": 0
   }
 });
@@ -26,8 +26,8 @@ export const getBusPointLayer = (): CircleLayer => ({
     "circle-color": "#00b7ff",
     "circle-stroke-width": 1,
     "circle-stroke-color": "#ffffff",
-    "circle-opacity": ["interpolate", ["linear"], ["zoom"], 10, 1, 16, 0],
-    "circle-stroke-opacity": ["interpolate", ["linear"], ["zoom"], 10, 1, 18, 0]
+    "circle-opacity": ["interpolate", ["linear"], ["zoom"], 10, 1, 14, 0],
+    "circle-stroke-opacity": ["interpolate", ["linear"], ["zoom"], 10, 1, 14, 0]
   },
 });
 

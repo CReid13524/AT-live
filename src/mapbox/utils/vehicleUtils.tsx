@@ -1,6 +1,6 @@
 import type { MapRef } from 'react-map-gl/mapbox';
 import { getBusFillExtrusionLayer, getBusPointLayer } from '../layers/vehicleLayers';
-import type { Vehicle } from '../../types';
+import type { Vehicle } from '../../types/at-dev-types';
 import { GeoJSONSource, Popup } from 'mapbox-gl';
 import { destination } from "@turf/turf";
 import type { MapMouseEvent } from 'react-map-gl/mapbox-legacy';
@@ -9,19 +9,19 @@ import { VEHICLE_SOURCE_ID, VEHICLE_POINT_SOURCE_ID, VEHICLE_BUS_LAYER_ID, VEHIC
 export function collectBusFeatures(vehiclePositions: Vehicle[]): GeoJSON.Feature[] {
   return vehiclePositions
     .filter(v => v.position && v.position.latitude && v.position.longitude)
-    .map((v) => {
+    .map((v, index) => {
       return {
         type: 'Feature',
         geometry: createBusPolygon(
-          v.position.longitude,
-          v.position.latitude,
-          parseFloat(v.position.bearing) || 0
+          v.position!.longitude!,
+          v.position!.latitude!,
+          v.position?.bearing ? parseFloat(v.position?.bearing) : 0
         ),
         properties: {
-          id: v.vehicle.id,
+          id: v.vehicle?.id || String(index),
           trip: v.trip,
-          speed: v.position.speed,
-          bearing: v.position.bearing,
+          speed: v.position?.speed,
+          bearing: v.position?.bearing,
           congestion_level: v.congestion_level,
           occupancy_status: v.occupancy_status,
           timestamp: v.timestamp,
@@ -33,21 +33,21 @@ export function collectBusFeatures(vehiclePositions: Vehicle[]): GeoJSON.Feature
 export function collectBusPointFeatures(vehiclePositions: Vehicle[]): GeoJSON.Feature[] {
   return vehiclePositions
     .filter(v => v.position && v.position.latitude && v.position.longitude)
-    .map((v) => {
+    .map((v, index) => {
       return {
         type: 'Feature',
         geometry: {
           type: 'Point',
           coordinates: [
-            v.position.longitude,
-            v.position.latitude,
+            v.position!.longitude!,
+            v.position!.latitude!,
           ],
         },
         properties: {
-          id: v.vehicle.id,
+          id: v.vehicle?.id || String(index),
           trip: v.trip,
-          speed: v.position.speed,
-          bearing: v.position.bearing,
+          speed: v.position?.speed,
+          bearing: v.position?.bearing,
           congestion_level: v.congestion_level,
           occupancy_status: v.occupancy_status,
           timestamp: v.timestamp,
@@ -160,15 +160,11 @@ export function setupVehicleEvents(mapRef: React.RefObject<MapRef | null>) {
     if (features.length > 0) {
       const feature = features[0];
 
-      const popupContent = `
+    const popupContent = `
       <div>
-        <strong>Vehicle ID:</strong> ${feature.properties?.id || 'N/A'}<br/>
-        <strong>Trip ID:</strong> ${feature.properties?.trip?.trip_id || 'N/A'}<br/>
-        <strong>Speed:</strong> ${feature.properties?.speed || 'N/A'} km/h<br/>
-        <strong>Bearing:</strong> ${feature.properties?.bearing || 'N/A'}°<br/>
-        <strong>Congestion Level:</strong> ${feature.properties?.congestion_level || 'N/A'}<br/>
-        <strong>Occupancy Status:</strong> ${feature.properties?.occupancy_status || 'N/A'}<br/>
-        <strong>Last Updated:</strong> ${feature.properties?.timestamp ? new Date(feature.properties.timestamp * 1000).toLocaleString() : 'N/A'}
+        ${Object.entries(feature.properties || {}).map(([key, value]) => `
+          <div><strong>${key}:</strong> ${value}</div>
+        `).join('')}
       </div>
     `;
 
@@ -192,8 +188,8 @@ export function setupVehicleEvents(mapRef: React.RefObject<MapRef | null>) {
 
 const getBusLayers = () => {
   return [
-    getBusFillExtrusionLayer(),
     getBusPointLayer(),
+    getBusFillExtrusionLayer(),
   ];
 }
 
@@ -204,8 +200,9 @@ function createBusPolygon(
 ) {
   const center = [lng, lat] as [number, number];
 
-  const halfLength = 4; // 8m bus
-  const halfWidth = 0.75;  // 1.5m bus
+  // Units in meters
+  const halfLength = 12;
+  const halfWidth = 4;
 
   const front = destination(center, halfLength, bearing, {
     units: "meters",

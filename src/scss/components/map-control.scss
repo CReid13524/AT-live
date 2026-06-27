@@ -1,139 +1,175 @@
-.map-control {
-  display: flex;
-  flex-direction: column;
-  top: 10px;
-  right: 50px;
-  z-index: 10;
-  position: absolute;
+.map-style-panel {
+    position: absolute;
+    top: $space-4;
+    left: $space-4;
+    z-index: $z-popup;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding: $space-4;
+    background: rgba($color-surface, .95);
+    backdrop-filter: blur(12px);
+    border: $border;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-lg;
+    color: $color-text;
 
-  .map-button {
-      width: 35px;
-      height: 35px;
-      background: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 8px;
-      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: black;
-      font-size: 30px;
+    .panel-section {
+        display: none;
+    }
+
+    &.expanded {
+        width: 360px;
+
+        .panel-section {
+            display: block;
+        }
+        .panel-header {
+            &.icon {
+                margin-bottom: $space-3;
+            }
+        }
     }
 }
 
-.map-style-panel {
-  margin-top: 8px;
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-  width: fit-content;
+.panel-header {
+    display: flex;
+    margin: 0 0 $space-3;
+    align-items: center;
+    flex-direction: row;
+    cursor: pointer;
+    height: 16px;
 
-  p {
-      font-size: 12px;
-      margin-bottom: 6px;
-      opacity: 0.7;
+    :hover {
+        color: $color-primary;
     }
-
-  .section {
-    display: inline-flex;
-    border: 1px solid black
-;
-    border-radius: 999px;
-
-    label {
-      appearance: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      cursor: pointer;
-
-      input {
-        appearance: none;
-        display: none;
-      }
-
-      p {
-        padding: 1px 5px 1px 5px;
-        border-radius: 999px;
-        margin: 3px;
-      }
-
-      .active {
-        background-color: #2196F3;
-        color: white;
-      }
+    &.icon {
+        margin-bottom: 0;
     }
-  }
+}
 
-  .switch-section {
+.panel-section + .panel-section {
+    margin-top: $space-5;
+}
+
+.panel-section h3 {
+    margin: 0;
+    color: $color-text-secondary;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.layer-controls {
     display: grid;
-    grid-template: 1fr 1fr / 1fr 1fr;
-    grid-auto-rows: auto;
-  }
+    gap: $space-3;
+}
+
+.layer-group {
+    padding: $space-3;
+    border: $border;
+    border-radius: $border-radius-md;
+    background: rgba(255,255,255,.03);
+}
+
+.layer-group h4 {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin: $space-2 0;
+    cursor: pointer;
+    font-size: $font-size-sm;
+
+    &.header {
+        margin: 0 0 $space-2;
+    }
+}
+
+.pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+}
+
+.pill-group label input {
+    display: none;
+}
+
+.pill-group label span {
+    display: block;
+    padding: $space-2 $space-3;
+    border-radius: 999px;
+    border: $border;
+    background: transparent;
+    color: $color-text-secondary;
+    cursor: pointer;
+    transition: $transition-fast;
+}
+
+.pill-group label span:hover {
+    background: $color-surface-light;
+}
+
+.pill-group label span.active {
+    background: $color-primary;
+    color: white;
+    border-color: $color-primary;
+}
+
+.switch-grid {
+    display: grid;
+    gap: $space-3;
+    margin-top: $space-4;
+}
+
+.switch-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: $font-size-sm;
 }
 
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 25px;
+    position: relative;
+    width: 42px;
+    height: 24px;
 }
 
-/* Hide default HTML checkbox */
 .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+    display: none;
 }
 
-/* The slider */
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 5px;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: $color-border;
+    cursor: pointer;
+    transition: $transition-fast;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 14px;
-  width: 14px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+.slider::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    transition: $transition-fast;
 }
 
-input:checked + .slider {
-  background-color: #2196F3;
+.switch input:checked + .slider {
+    background: $color-primary;
 }
 
-input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
-}
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(20px);
-  -ms-transform: translateX(20px);
-  transform: translateX(20px);
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
+.switch input:checked + .slider::before {
+    transform: translateX(18px);
 }
